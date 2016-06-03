@@ -6,6 +6,21 @@
 
 const float PI = 3.14159265359;
 
+class Point {
+public:
+	float x, y, z;
+	Point() {
+		x = 0;
+		y = 0;
+		z = 0;
+	}
+	Point(float x, float y, float z) {
+		this->x = x;
+		this->y = y;
+		this->z = z;
+	}
+};
+
 class Vector {
 public:
 	float i, j, k;
@@ -70,18 +85,10 @@ class Quaternion {
 public:
 	float s;
 	Vector v;
-	Quaternion() {
-		s = 0;
-	}
-	Quaternion(float w, float x, float y, float z) {
-		s = w;
-		v.i = x;
-		v.j = y;
-		v.k = z;
-	}
-	Quaternion(Vector v, float a) {
-		s = cos(a*PI / 360);
-		this->v = v*sin(a*PI / 360);
+	Quaternion() {}
+	Quaternion(float s, Vector v) {
+		this->s = cos(s*PI / 360);
+		this->v = v*sin(s*PI / 360);
 	}
 	Quaternion operator+(Quaternion q) {
 		Quaternion Q;
@@ -128,6 +135,14 @@ public:
 			2 * (v.i*v.k - s*v.j), 2 * (v.j*v.k + s*v.i), 1 - 2 * (v.i*v.i + v.j*v.j), 0,
 			0,0,0,1 };
 		glMultMatrixf(m);
+	}
+	void apply(Point p) {
+		Quaternion P;
+		P.s = 0; P.v.i = p.x; P.v.j = p.y; P.v.k = p.z;
+		Quaternion Q;
+		Q.s = s; Q.v = v;
+		Q = Q*P*Q.inverse();
+		Q.apply();
 	}
 };
 float dot(Quaternion Q1, Quaternion Q2) {
@@ -327,21 +342,6 @@ public:
 		this->r = r;
 		this->g = g;
 		this->b = b;
-	}
-};
-
-class Point {
-public:
-	float x, y, z;
-	Point() {
-		x = 0;
-		y = 0;
-		z = 0;
-	}
-	Point(float x, float y, float z) {
-		this->x = x;
-		this->y = y;
-		this->z = z;
 	}
 };
 
