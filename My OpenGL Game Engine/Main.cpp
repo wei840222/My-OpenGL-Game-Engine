@@ -4,78 +4,101 @@
 
 using namespace std;
 
-int old_x = 0, old_y = 0, spin_x = 0, spin_y = 0;
+int old_x = 0, old_y = 0;
+GLfloat spin_x = 0, spin_y = 0;
 
-bool animationPlay = true;
-int animationDelay = 20;
+Point P1(0, 0, 0), P2(0, 40, 0), P3(20, 20, 20), P4(0, 0, 40);
+Vector T1(100, 0, 0), T2(-100, 0, 0);
+hermiteCurves cubeHC(P1, P2, T1, T2);
+bezierCurves cubeBC(P1, P2, P3, P4);
+catmullRomSpline cubeCC(P1, P2, P3, P4);
 float t = 0;
+bool go = true;
 
-Point O(0, 0, 0), Q1(50, 0, 0), Q2(0, 50, 0);
-Vector X(1, 0, 0), Y(0, 1, 0), Z(0, 0, 1);
-
-Quaternion q1(X, 90), q2(Z, 90);
-
-void CommandIO() {
-	//命令列資訊
-	system("CLS");
+////////////////初始化////////////////
+void Initialize() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-50, 50, -50, 50, -50, 50);
+	glMatrixMode(GL_MODELVIEW);
+	glClearColor(1, 1, 1, 1);
 }
 
+////////////////命令列資訊////////////////
+void Showdata() {
+	system("CLS");
+	printf("hermiteCurves:\nX: %f Y: %f Z: %f\n", cubeHC.parameter(t).x, cubeHC.parameter(t).y, cubeHC.parameter(t).z);
+	printf("bezierCurves:\nX: %f Y: %f Z: %f\n", cubeBC.parameter(t).x, cubeBC.parameter(t).y, cubeBC.parameter(t).z);
+	printf("catmullRomSpline:\nX: %f Y: %f Z: %f\n", cubeCC.parameter(t).x, cubeCC.parameter(t).y, cubeCC.parameter(t).z);
+}
+
+////////////////描繪畫面////////////////
 void Display() {
-	////描繪畫面
 	//清理顏色緩衝區
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	//保存當前模型視圖矩陣
 	glPushMatrix();
 	//畫面旋轉
+	glTranslatef(-0.5, 0, 0);
 	glRotatef(spin_y, 1.0, 0.0, 0.0);
 	glRotatef(spin_x, 0.0, 1.0, 0.0);
 
-	//四分數旋轉
-	Quaternion q3 = slerp(t, q1, q2);
-	q3.apply();
-	//茶壺
-	glColor3f(0.2, 0.7, 0.1);
-	glutWireTeapot(50);
+	//hermiteCurves方塊
+	glPushMatrix();
+	glColor3f(0, 0, 1);
+	glTranslatef(cubeHC.parameter(t).x, cubeHC.parameter(t).y, cubeHC.parameter(t).z);
+	glutSolidCube(1);
+	glPopMatrix();
+
+	//bezierCurves方塊
+	glPushMatrix();
+	glColor3f(0, 1, 0);
+	glTranslatef(cubeBC.parameter(t).x, cubeBC.parameter(t).y, cubeBC.parameter(t).z);
+	glutSolidCube(1);
+	glPopMatrix();
+
+	//catmullRomSpline方塊
+	glPushMatrix();
+	glColor3f(1, 0, 0);
+	glTranslatef(cubeCC.parameter(t).x, cubeCC.parameter(t).y, cubeCC.parameter(t).z);
+	glutSolidCube(1);
+	glPopMatrix();
 
 	//彈出堆棧
 	glPopMatrix();
-
+	//顯示命令列資料
+	Showdata();
 	//交換緩衝區
 	glutSwapBuffers();
-}
-
-void AnimationTimer(int id) {
-	//動畫
-	if (animationPlay) {
+	//代入參數
+	if (go) {
 		t += 0.01;
 		if (t > 1)
-			animationPlay = false;
+			go = false;
 	}
 	else {
 		t -= 0.01;
 		if (t < 0)
-			animationPlay = true;
+			go = true;
 	}
-	glutTimerFunc(animationDelay, AnimationTimer, 1);
 }
 
+////////////////獲取滑鼠按下////////////////
 void MouseClick(int button, int state, int x, int y) {
-	////獲取滑鼠按下
 	old_x = x;
 	old_y = y;
 	glutPostRedisplay();
 }
 
+////////////////獲取滑鼠拖曳////////////////
 void MouseMotion(int x, int y) {
-	////獲取滑鼠拖曳
 	spin_x = x - old_x;
 	spin_y = y - old_y;
 	glutPostRedisplay();
 }
 
+////////////////獲取鍵盤按下////////////////
 void SpecialKeyPress(int key, int x, int y) {
-	//獲取鍵盤按下
 	switch (key) {
 	case GLUT_KEY_UP:
 		glutPostRedisplay();
@@ -86,26 +109,19 @@ void SpecialKeyPress(int key, int x, int y) {
 	}
 }
 
-void Initialize() {
-	//圖形初始化
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glEnable(GL_DEPTH_TEST);							//開啟深度測試
-	glutInitWindowSize(600, 600);						//視窗長寬
-	glutInitWindowPosition(600, 50);					//視窗左上角的位置
-	glutCreateWindow("My OpenGL Projects");				//建立視窗並打上標題
-	glOrtho(-100, 100, -100, 100, -100, 100);			//畫面範圍
-	glClearColor(1, 1, 1, 1);							//背景色
-	glutMouseFunc(MouseClick);							//滑鼠按下
-	glutMotionFunc(MouseMotion);						//滑鼠拖曳
-	glutSpecialFunc(SpecialKeyPress);					//處理按鍵
-	glutDisplayFunc(Display);							//負責描繪
-	glutIdleFunc(Display);								//負責動畫
-	glutTimerFunc(animationDelay, AnimationTimer, 1);	//動畫延遲時間
-}
-
 int main() {
-	CommandIO();		//顯示命令列資料
-	Initialize();		//圖形初始化
-	glutMainLoop();		//進入主迴圈
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+	glEnable(GL_DEPTH_TEST);						//開啟深度測試
+	glutInitWindowSize(800, 600);					//視窗長寬
+	glutInitWindowPosition(400, 300);				//視窗左上角的位置
+	glutCreateWindow("My OpenGL Projects");			//建立視窗並打上標題
+
+	Initialize();
+	glutMouseFunc(MouseClick);						//滑鼠按下
+	glutMotionFunc(MouseMotion);					//滑鼠拖曳
+	glutSpecialFunc(SpecialKeyPress);				//處理按鍵
+	glutDisplayFunc(Display);						//負責描繪
+	glutIdleFunc(Display);							//負責動畫
+	glutMainLoop();									//進入主迴圈
 	return 0;
 }
