@@ -141,7 +141,7 @@ public:
 		P.s = 0; P.v.i = p.x; P.v.j = p.y; P.v.k = p.z;
 		Quaternion Q;
 		Q.s = s; Q.v = v;
-		Q = Q*P*Q.inverse();
+		Q = Q*P.normalize()*Q.conjugate();
 		Q.apply();
 	}
 };

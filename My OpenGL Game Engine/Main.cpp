@@ -13,7 +13,7 @@ int animationDelay = 10;
 float t = 0;
 
 //Ã¸¹Ïª«¥ó
-Point O(0, 0, 0), Q1(1, 0, 0);
+Point O(0, 0, 0), Q1(10, 0, 0);
 Vector X(1, 0, 0), Y(0, 1, 0), Z(0, 0, 1);
 Quaternion q1(90, X), q2(90, Y);
 
