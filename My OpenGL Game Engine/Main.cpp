@@ -1,113 +1,105 @@
-#include <iostream>
-#include <GL/glut.h>
-#include "header.h"
+#include <iostream>  
+#include <GL/glut.h>  
+#include "header.h"  
 
 using namespace std;
 
-int old_x = 0, old_y = 0;
-GLfloat spin_x = 0, spin_y = 0;
+//滑鼠拖曳畫面旋轉
+int mouseClick_x = 0, mouseClick_y = 0, mouseMotion_x = 0, mouseMotion_y = 0;
 
-Color red(1, 0, 0), green(0, 1, 0), blue(0, 0, 1);
-Point O(0, 0, 0), cube(0, 20, 0);
-Vector N(0, 1, 0), V(0, 40, 0);
-Line L(O, V);
-Plane P(O, N);
+//動畫控制
+bool animationPlay = true;
+int animationDelay = 20;
+float t = 0;
 
-////////////////初始化////////////////
-void Initialize() {
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-50, 50, -50, 50, -50, 50);
-	glMatrixMode(GL_MODELVIEW);
-}
+//繪圖物件
+Point O(0, 0, 0), Q1(50, 0, 0), Q2(0, 50, 0);
+Vector X(1, 0, 0), Y(0, 1, 0), Z(0, 0, 1);
+Quaternion q1(X, 90), q2(Z, 90);
 
-////////////////顯示計算結果////////////////
-void ShowData() {
+
+void CommandIO() {
 	system("CLS");
-	cout << "cube(" << cube.x << ", " << cube.y << ", " << cube.z << ")" << endl;
-	cout << "CollisionPoint(" << collisionPoint(L, P).x << ", " << collisionPoint(L, P).y << ", " << collisionPoint(L, P).z << ")" << endl;
 }
 
-////////////////描繪畫面////////////////
 void Display() {
-	glClearColor(1, 1, 1, 1);				//不透明黑色背景
-	glClear(GL_COLOR_BUFFER_BIT);			//清理顏色緩衝區
+	//清除顏色緩衝區
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-											//畫面旋轉
 	glPushMatrix();
-	glTranslatef(-0.5, 0, 0);
-	glRotatef(spin_y, 1.0, 0.0, 0.0);
-	glRotatef(spin_x, 0.0, 1.0, 0.0);
+	//處理畫面旋轉
+	glRotatef(mouseMotion_y, 1.0, 0.0, 0.0);
+	glRotatef(mouseMotion_x, 0.0, 1.0, 0.0);
+
+	//四分數內插
+	Quaternion q3 = slerp(t, q1, q2);
+	q3.apply();
+	//畫茶壺
+	glColor3f(0.2, 0.7, 0.1);
+	glutWireTeapot(50);
 
 
-	//平面
-	glBegin(GL_QUADS);
-	glColor3f(1, 0, 0);
-	glVertex3f(10, 0, 10);
-	glVertex3f(-10, 0, 10);
-	glVertex3f(-10, 0, -10);
-	glVertex3f(10, 0, -10);
-	glEnd();
-
-	//線
-	L.draw(green);
-
-	//方塊
-	glPushMatrix();
-	glColor3f(0, 0, 1);
-	glTranslatef(0, cube.y, 0);
-	glutSolidCube(1);
 	glPopMatrix();
-
-	//更新畫面
-	glPopMatrix();
-	glFlush();
+	//交換緩衝區
+	glutSwapBuffers();
 }
 
-////////////////獲取滑鼠按下////////////////
+void AnimationTimer(int id) {
+	if (animationPlay) {
+		t += 0.01;
+		if (t > 1)
+			animationPlay = false;
+	}
+	else {
+		t -= 0.01;
+		if (t < 0)
+			animationPlay = true;
+	}
+	glutTimerFunc(animationDelay, AnimationTimer, 1);
+}
+
 void MouseClick(int button, int state, int x, int y) {
-	old_x = x;
-	old_y = y;
+	mouseClick_x = x;
+	mouseClick_y = y;
 	glutPostRedisplay();
 }
 
-////////////////獲取滑鼠拖曳////////////////
 void MouseMotion(int x, int y) {
-	spin_x = x - old_x;
-	spin_y = y - old_y;
+	mouseMotion_x = x - mouseClick_x;
+	mouseMotion_y = y - mouseClick_y;
 	glutPostRedisplay();
 }
 
-////////////////獲取鍵盤按下////////////////
 void SpecialKeyPress(int key, int x, int y) {
 	switch (key) {
 	case GLUT_KEY_UP:
-		if (cube.y < 40)
-			cube.y++;
 		glutPostRedisplay();
-		ShowData();
 		break;
 	case GLUT_KEY_DOWN:
-		if (cube.y != collisionPoint(L, P).y)
-			cube.y--;
 		glutPostRedisplay();
-		ShowData();
 		break;
 	}
 }
 
-int main() {
-	glutInitWindowSize(800, 600);					//視窗長寬
-	glutInitWindowPosition(400, 300);				//視窗左上角的位置
-	glutCreateWindow("My OpenGL Projects");			//建立視窗並打上標題
+void Initialize() {
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+	glEnable(GL_DEPTH_TEST);
+	glutInitWindowSize(800, 800);
+	glutInitWindowPosition(600, 50);
+	glutCreateWindow("My OpenGL Game Engine");
+	glOrtho(-100, 100, -100, 100, -100, 100);
+	glClearColor(1, 1, 1, 1);
+	glutMouseFunc(MouseClick);
+	glutMotionFunc(MouseMotion);
+	glutSpecialFunc(SpecialKeyPress);
+	glutDisplayFunc(Display);
+	glutIdleFunc(Display);
+	glutTimerFunc(animationDelay, AnimationTimer, 1);
+}
 
+int main() {
+	CommandIO();
 	Initialize();
-	ShowData();
-	//下面三個與Callback函式有關
-	glutMouseFunc(MouseClick);						//滑鼠按下
-	glutMotionFunc(MouseMotion);					//滑鼠拖曳
-	glutSpecialFunc(SpecialKeyPress);				//處理按鍵
-	glutDisplayFunc(Display);						//負責描繪
-	glutMainLoop();									//進入主迴圈
+	glutMainLoop();
 	return 0;
 }
