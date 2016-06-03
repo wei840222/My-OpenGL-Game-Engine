@@ -7,121 +7,102 @@ using namespace std;
 int old_x = 0, old_y = 0;
 GLfloat spin_x = 0, spin_y = 0;
 
-Point P1(0, 0, 0), P2(0, 40, 0), P3(20, 20, 20), P4(0, 0, 40);
-Vector T1(100, 0, 0), T2(-100, 0, 0);
-hermiteCurves cubeHC(P1, P2, T1, T2);
-bezierCurves cubeBC(P1, P2, P3, P4);
-catmullRomSpline cubeCC(P1, P2, P3, P4);
-float t = 0;
-bool go = true;
+Color red(1, 0, 0), green(0, 1, 0), blue(0, 0, 1);
+Point o(0, 0, 0);
+Vector u(1, 2, 3), v(10, 10, 10);
 
-////////////////初始化////////////////
+Vector V[3] = { { 1, 2, 3 },{ 4, 5, 6 },{ 7, 8, 9 } };
+Matrix3x3 M(V[0], V[1], V[2]);
+
 void Initialize() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-50, 50, -50, 50, -50, 50);
+	glOrtho(-20, 20, -20, 20, -20, 20);
 	glMatrixMode(GL_MODELVIEW);
-	glClearColor(1, 1, 1, 1);
-}
-
-////////////////命令列資訊////////////////
-void Showdata() {
-	system("CLS");
-	printf("hermiteCurves:\nX: %f Y: %f Z: %f\n", cubeHC.parameter(t).x, cubeHC.parameter(t).y, cubeHC.parameter(t).z);
-	printf("bezierCurves:\nX: %f Y: %f Z: %f\n", cubeBC.parameter(t).x, cubeBC.parameter(t).y, cubeBC.parameter(t).z);
-	printf("catmullRomSpline:\nX: %f Y: %f Z: %f\n", cubeCC.parameter(t).x, cubeCC.parameter(t).y, cubeCC.parameter(t).z);
 }
 
 ////////////////描繪畫面////////////////
 void Display() {
-	//清理顏色緩衝區
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//保存當前模型視圖矩陣
+	glClearColor(0, 0, 0, 1);				//不透明黑色背景
+	glClear(GL_COLOR_BUFFER_BIT);			//清理顏色緩衝區
+
 	glPushMatrix();
-	//畫面旋轉
 	glTranslatef(-0.5, 0, 0);
 	glRotatef(spin_y, 1.0, 0.0, 0.0);
 	glRotatef(spin_x, 0.0, 1.0, 0.0);
 
-	//hermiteCurves方塊
-	glPushMatrix();
-	glColor3f(0, 0, 1);
-	glTranslatef(cubeHC.parameter(t).x, cubeHC.parameter(t).y, cubeHC.parameter(t).z);
-	glutSolidCube(1);
-	glPopMatrix();
+	//繪圖
+	Line lu(o, u), lv(o, v), luvCN(o, cross(u, v).normalize());
+	lu.draw(red);
+	lv.draw(green);
+	luvCN.draw(blue);
 
-	//bezierCurves方塊
-	glPushMatrix();
-	glColor3f(0, 1, 0);
-	glTranslatef(cubeBC.parameter(t).x, cubeBC.parameter(t).y, cubeBC.parameter(t).z);
-	glutSolidCube(1);
-	glPopMatrix();
+	glutWireCube(20);
 
-	//catmullRomSpline方塊
-	glPushMatrix();
-	glColor3f(1, 0, 0);
-	glTranslatef(cubeCC.parameter(t).x, cubeCC.parameter(t).y, cubeCC.parameter(t).z);
-	glutSolidCube(1);
 	glPopMatrix();
-
-	//彈出堆棧
-	glPopMatrix();
-	//顯示命令列資料
-	Showdata();
-	//交換緩衝區
-	glutSwapBuffers();
-	//代入參數
-	if (go) {
-		t += 0.01;
-		if (t > 1)
-			go = false;
-	}
-	else {
-		t -= 0.01;
-		if (t < 0)
-			go = true;
-	}
+	glFlush();								//更新畫面
 }
 
 ////////////////獲取滑鼠按下////////////////
 void MouseClick(int button, int state, int x, int y) {
 	old_x = x;
 	old_y = y;
-	glutPostRedisplay();
+	Display();
 }
 
 ////////////////獲取滑鼠拖曳////////////////
 void MouseMotion(int x, int y) {
 	spin_x = x - old_x;
 	spin_y = y - old_y;
-	glutPostRedisplay();
+	Display();
 }
 
-////////////////獲取鍵盤按下////////////////
-void SpecialKeyPress(int key, int x, int y) {
-	switch (key) {
-	case GLUT_KEY_UP:
-		glutPostRedisplay();
-		break;
-	case GLUT_KEY_DOWN:
-		glutPostRedisplay();
-		break;
+////////////////顯示計算結果////////////////
+void ShowData() {
+	//向量運算值
+	cout << "Practice 1: " << u.length() << endl;
+	cout << "length u: " << u.length() << endl;
+	cout << "length v: " << v.length() << endl;
+	cout << "normalize u: " << u.normalize().i << ' ' << u.normalize().j << ' ' << u.normalize().k << endl;
+	cout << "normalize v: " << v.normalize().i << ' ' << v.normalize().j << ' ' << v.normalize().k << endl;
+	cout << "dot product u.v: " << dot(u, v) << endl;
+	cout << "cross product uxv: " << cross(u, v).i << ' ' << cross(u, v).j << ' ' << cross(u, v).k << endl;
+	//矩陣運算值
+	cout << "\nPractice 2: " << endl;
+	cout << "M = " << endl;
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++)
+			cout << M.element[i][j] << ' ';
+		cout << endl;
+	}
+	cout << "M cofactor (1,0) = " << M.cofactor(1, 0) << endl;
+	cout << "M's det = " << M.det() << endl;
+	if (M.det() == 0)
+		cout << "M is singular !" << endl;
+	else {
+		Matrix3x3 Mi = M.inverse();
+		cout << "M is invertible !" << endl;
+		cout << "M's inverse = " << endl;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++)
+				cout << Mi.element[i][j] << ' ';
+			cout << endl;
+		}
 	}
 }
 
+
 int main() {
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glEnable(GL_DEPTH_TEST);						//開啟深度測試
-	glutInitWindowSize(800, 600);					//視窗長寬
+	glutInitWindowSize(400, 300);					//視窗長寬
 	glutInitWindowPosition(400, 300);				//視窗左上角的位置
 	glutCreateWindow("My OpenGL Projects");			//建立視窗並打上標題
 
 	Initialize();
+	ShowData();
+	//下面三個與Callback函式有關
 	glutMouseFunc(MouseClick);						//滑鼠按下
 	glutMotionFunc(MouseMotion);					//滑鼠拖曳
-	glutSpecialFunc(SpecialKeyPress);				//處理按鍵
 	glutDisplayFunc(Display);						//負責描繪
-	glutIdleFunc(Display);							//負責動畫
 	glutMainLoop();									//進入主迴圈
 	return 0;
 }
