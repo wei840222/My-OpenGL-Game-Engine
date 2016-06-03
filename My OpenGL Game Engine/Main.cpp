@@ -9,13 +9,13 @@ int mouseClick_x = 0, mouseClick_y = 0, mouseMotion_x = 0, mouseMotion_y = 0;
 
 //動畫控制
 bool animationPlay = true;
-int animationDelay = 20;
+int animationDelay = 10;
 float t = 0;
 
 //繪圖物件
-Point O(0, 0, 0), Q1(50, 0, 0), Q2(0, 50, 0);
+Point O(0, 0, 0), Q1(10, 0, 0);
 Vector X(1, 0, 0), Y(0, 1, 0), Z(0, 0, 1);
-Quaternion q1(X, 90), q2(Z, 90);
+Quaternion q1(90, X), q2(90, Y);
 
 
 void CommandIO() {
@@ -33,7 +33,7 @@ void Display() {
 
 	//四分數內插
 	Quaternion q3 = slerp(t, q1, q2);
-	q3.apply();
+	q3.apply(Q1);
 	//畫茶壺
 	glColor3f(0.2, 0.7, 0.1);
 	glutWireTeapot(50);
