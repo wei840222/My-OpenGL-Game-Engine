@@ -13,7 +13,7 @@ int animationDelay = 10;
 float t = 0;
 
 //繪圖物件
-Point O(0, 0, 0), Q1(10, 0, 0);
+Point O(0, 0, 0), Q1(2, 0, 0);
 Vector X(1, 0, 0), Y(0, 1, 0), Z(0, 0, 1);
 Quaternion q1(90, X), q2(90, Y);
 
@@ -33,7 +33,7 @@ void Display() {
 
 	//四分數內插
 	Quaternion q3 = slerp(t, q1, q2);
-	q3.apply(Q1);
+	q3.apply();
 	//畫茶壺
 	glColor3f(0.2, 0.7, 0.1);
 	glutWireTeapot(50);
@@ -84,8 +84,8 @@ void SpecialKeyPress(int key, int x, int y) {
 void Initialize() {
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glEnable(GL_DEPTH_TEST);
-	glutInitWindowSize(800, 800);
-	glutInitWindowPosition(600, 50);
+	glutInitWindowSize(600, 600);
+	glutInitWindowPosition(400, 50);
 	glutCreateWindow("My OpenGL Game Engine");
 	glOrtho(-100, 100, -100, 100, -100, 100);
 	glClearColor(1, 1, 1, 1);
