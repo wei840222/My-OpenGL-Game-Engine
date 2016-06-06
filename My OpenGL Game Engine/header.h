@@ -484,4 +484,12 @@ public:
 		return CC;
 	}
 };
+
+void AccelerationMoving(Point p, Vector v, Vector a, float t) {
+	Point now;
+	now.x = p.x + v.i*t + a.i / 2 * pow(t, 2);
+	now.y = p.y + v.j*t + a.j / 2 * pow(t, 2);
+	now.z = p.z + v.k*t + a.k / 2 * pow(t, 2);
+	glTranslatef(now.x, now.y, now.z);
+}
 #endif
