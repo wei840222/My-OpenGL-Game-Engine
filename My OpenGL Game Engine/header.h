@@ -349,7 +349,7 @@ class Line {
 public:
 	Point P;
 	Vector V;
-	Line();
+	Line() {};
 	Line(Point P, Vector V) {
 		this->P = P;
 		this->V = V;
@@ -491,5 +491,15 @@ void AccelerationMoving(Point p, Vector v, Vector a, float t) {
 	now.y = p.y + v.j*t + a.j / 2 * pow(t, 2);
 	now.z = p.z + v.k*t + a.k / 2 * pow(t, 2);
 	glTranslatef(now.x, now.y, now.z);
+}
+
+Vector Friction(float thida) {
+	float g = 9.8, uk = 0.5;
+	Vector Fa;
+	float fa = g*sin(thida*PI / 180) - g*cos(thida*PI / 180)*uk;
+	Fa.i = fa*cos(thida*PI / 180);
+	Fa.j = -fa*sin(thida*PI / 180);
+	Fa.k = 0;
+	return Fa;
 }
 #endif

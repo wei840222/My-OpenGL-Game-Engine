@@ -23,14 +23,10 @@ Vector x(150, 0, 0), y(0, 150, 0), z(0, 0, 150);
 Line X(o, x), Y(o, y), Z(o, z);
 
 //拋物體運動
-Point start(0, 0, 0);
-Vector speed(15, 30, 0);
-Vector acceleration(0, -9.8, 0);
+Point start(0, 50, 0);
+Vector speed(0, 0, 0);
+Vector acceleration(0, 0, 0);
 
-
-void CommandIO() {
-	system("CLS");
-}
 
 void Display() {
 	//清除顏色緩衝區
@@ -41,13 +37,23 @@ void Display() {
 	glRotatef(mouseMotion_y, 1.0, 0.0, 0.0);
 	glRotatef(mouseMotion_x, 0.0, 1.0, 0.0);
 
+	//X Y Z軸
 	glLineWidth(2);
 	X.draw(red); Y.draw(green); Z.draw(blue);
 
-	//拋物體運動
+	//斜坡
+	glLineWidth(1);
+	glColor3f(0.5, 0.5, 0.5);
+	glBegin(GL_POLYGON);
+	glVertex3f(0, 0, 0);
+	glVertex3f(0, 50, 0);
+	glVertex3f(85, 0, 0);
+	glEnd();
+
+	//摩擦力下滑運動
 	glColor3f(0, 0, 0);
 	glPushMatrix();
-	AccelerationMoving(start, speed, acceleration, t);
+	AccelerationMoving(start, speed, Friction(30), t);
 	glutSolidCube(5);
 	glPopMatrix();
 
@@ -58,10 +64,10 @@ void Display() {
 
 void AnimationTimer(int id) {
 	if (animationPlay) {
-		t < 10 ? t+=0.01 : t = 0;
+		t < 50 ? t+=0.01 : t = 0;
 	}
-	glutTimerFunc(animationDelay, AnimationTimer, 1);
 	glutPostRedisplay();
+	glutTimerFunc(animationDelay, AnimationTimer, 1);
 }
 
 void MouseClick(int button, int state, int x, int y) {
@@ -106,7 +112,6 @@ int main() {
 	glutDisplayFunc(Display);
 	glutTimerFunc(animationDelay, AnimationTimer, 1);
 
-	CommandIO();
 	GLInitialize();
 	glutMainLoop();
 	return 0;
